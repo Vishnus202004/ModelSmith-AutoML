@@ -1,0 +1,230 @@
+/* ================= ABOUT PAGE FOUNDATION ================= */
+.about-container {
+  min-height: 100vh;
+  background-color: #020617;
+  color: white;
+  padding: 120px 40px 60px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* DECORATIVE GRID */
+.abstract-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, black, transparent);
+  pointer-events: none;
+}
+
+.glow-sphere {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.1;
+  z-index: 0;
+}
+.top-right { top: -10%; right: -5%; background: #3b82f6; }
+.bottom-left { bottom: -10%; left: -5%; background: #dd49f4; }
+
+.about-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* ================= HERO SECTION ================= */
+.about-hero {
+  text-align: center;
+  margin-bottom: 100px;
+}
+
+.version-tag {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  border-radius: 100px;
+  margin-bottom: 25px;
+}
+
+.about-hero h1 {
+  font-size: 4.5rem;
+  font-weight: 800;
+  letter-spacing: -3px;
+  margin-bottom: 15px;
+}
+
+.hero-sub {
+  font-size: 1.3rem;
+  color: #94a3b8;
+}
+
+/* ================= MISSION BOX ================= */
+.about-mission {
+  margin-bottom: 120px;
+}
+
+.mission-box {
+  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  padding: 60px;
+  border-radius: 32px;
+  border: 1px solid rgba(255,255,255,0.08);
+  text-align: center;
+}
+
+.mission-box h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  background: linear-gradient(to right, white, #94a3b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.mission-box p {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #cbd5f5;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ================= PIPELINE GRID ================= */
+.pipeline-section {
+  margin-bottom: 120px;
+}
+
+.section-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #3b82f6;
+  margin-bottom: 40px;
+}
+
+.pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+.pipeline-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-num {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 3rem;
+  font-weight: 900;
+  opacity: 0.05;
+}
+
+.step-icon {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.pipeline-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: white;
+}
+
+.pipeline-card p {
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* ================= TECH STACK ================= */
+.tech-stack-section {
+  text-align: center;
+  margin-bottom: 120px;
+}
+
+.tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.tech-pill {
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #cbd5e1;
+  cursor: default;
+}
+
+/* ================= DEVELOPER CARD ================= */
+.developer-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 80px;
+}
+
+.dev-card {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  background: #ffffff05;
+  padding: 40px;
+  border-radius: 24px;
+  border: 1px solid #ffffff10;
+  max-width: 600px;
+}
+
+.dev-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #3b82f6, #dd49f4);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+}
+
+.dev-info h3 { font-size: 1.5rem; margin-bottom: 4px; }
+.dev-info p { color: #3b82f6; font-weight: 700; font-size: 0.9rem; margin-bottom: 15px; }
+.dev-bio { color: #94a3b8; font-size: 0.95rem; line-height: 1.6; }
+
+.about-footer {
+  text-align: center;
+  padding-top: 40px;
+  border-top: 1px solid #ffffff05;
+  color: #475569;
+  font-size: 13px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .about-hero h1 { font-size: 2.8rem; }
+  .pipeline-grid { grid-template-columns: 1fr; }
+  .dev-card { flex-direction: column; text-align: center; }
+  .mission-box { padding: 30px; }
+}
