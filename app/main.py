@@ -1,13 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv  # 🔥 ADD THIS
+from dotenv import load_dotenv
 import os
 
 # 🔥 LOAD ENV VARIABLES
 load_dotenv()
 
 from app.routes import router
-
 
 app = FastAPI(
     title="MSMITH AutoML API",
@@ -28,6 +27,13 @@ app.add_middleware(
 def home():
     return {
         "message": "Welcome to MSMITH AutoML 🚀"
+    }
+
+# 🔥 VERCEL TEST ROUTE
+@app.get("/api")
+def vercel_test():
+    return {
+        "message": "FastAPI running on Vercel 🚀"
     }
 
 app.include_router(router)
