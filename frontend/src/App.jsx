@@ -1,9 +1,9 @@
 import Nav from './components/Nav';
 import './App.css';
 import { Route, Routes } from 'react-router-dom';
-import Home from './pages/Home';
-import About from './pages/About';
-import Dashboard from './pages/Dashboard';
+import Home from './Pages/Home';
+import About from './Pages/About';
+import Dashboard from './Pages/Dashboard';
 import History from './Pages/History';
 import Predict from './Pages/Predict';
 
