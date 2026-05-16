@@ -30,7 +30,7 @@ def sanitize_data(data):
             return None
     return data
 
-@router.get("/download-model")
+@router.get("/api/download-model")
 def download_model():
     try:
         return FileResponse(
@@ -41,7 +41,7 @@ def download_model():
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/upload")
+@router.post("/api/upload")
 async def upload_file(file: UploadFile):
     try:
         df = load_csv(file)
@@ -113,21 +113,21 @@ async def upload_file(file: UploadFile):
             "feature_importance": feature_importance
         })
 
-        # --- 📊 VISUALIZATION LOGIC FOR DASHBOARD ---
-        
-        # 1. Histogram Data (Distribution of the first feature)
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         hist_data = []
+
         if numeric_cols:
             first_num = numeric_cols[0]
             counts, bins = np.histogram(df[first_num].dropna(), bins=10)
-            hist_data = [{"bin": f"{bins[i]:.1f}", "count": int(counts[i])} for i in range(len(counts))]
+            hist_data = [
+                {"bin": f"{bins[i]:.1f}", "count": int(counts[i])}
+                for i in range(len(counts))
+            ]
 
-        # 2. Target Distribution (Pie Chart)
         target_dist = df[target_column].value_counts().to_dict()
 
-        # 3. Statistical Summary (Boxplot Table Data)
         stats = df.describe().to_dict()
+
         stats_summary = {
             col: {
                 "min": float(stats[col]["min"]),
@@ -135,10 +135,10 @@ async def upload_file(file: UploadFile):
                 "median": float(stats[col]["50%"]),
                 "q3": float(stats[col]["75%"]),
                 "max": float(stats[col]["max"])
-            } for col in numeric_cols[:5] # Limit to top 5 for UI clarity
+            }
+            for col in numeric_cols[:5]
         }
 
-        # 4. Correlation Matrix
         numeric_df = df.select_dtypes(include=['int64', 'float64'])
         correlation_matrix = numeric_df.corr().to_dict()
 
@@ -167,7 +167,6 @@ async def upload_file(file: UploadFile):
             "metrics": metrics
         }
 
-        # Clean any NaN values before returning to prevent JSON errors
         return sanitize_data(response_payload)
 
     except Exception as e:
@@ -175,31 +174,41 @@ async def upload_file(file: UploadFile):
         print(traceback.format_exc())
         return {"error": str(e)}
 
-@router.post("/predict")
+@router.post("/api/predict")
 async def predict(request: PredictionRequest):
     try:
         model = joblib.load("final_model.pkl")
         preprocessor = joblib.load("preprocessor.pkl")
+
         input_df = pd.DataFrame([request.features])
         input_processed = preprocessor.transform(input_df)
+
         prediction = model.predict(input_processed)
+
         return {
             "prediction": prediction.tolist(),
             "input_features": request.features
         }
+
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/experiments")
+@router.get("/api/experiments")
 def get_experiments():
     from app.db.database import get_connection
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
         cursor.execute("SELECT * FROM experiments")
+
         rows = cursor.fetchall()
+
         conn.close()
+
         results = []
+
         for row in rows:
             results.append({
                 "id": row[0],
@@ -210,6 +219,9 @@ def get_experiments():
                 "initial_scores": row[5],
                 "feature_importance": row[6]
             })
+
         return {"experiments": results}
+
     except Exception as e:
         return {"error": str(e)}
+}
