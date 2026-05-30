@@ -118,7 +118,7 @@ def optimize_model(model_name, X_train, y_train, problem_type):
         # -------------------------------
         elif model_name == "neural_network":
 
-            epochs = trial.suggest_int("epochs", 50, 150)
+            epochs = trial.suggest_int("epochs", 20, 60)
             batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
             learning_rate = trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True)
             dropout_rate = trial.suggest_float("dropout_rate", 0.0, 0.5)
@@ -169,7 +169,7 @@ def optimize_model(model_name, X_train, y_train, problem_type):
     # -------------------------------
     # RUN OPTIMIZATION
     # -------------------------------
-    study.optimize(objective, n_trials=20)
+    study.optimize(objective, n_trials=5)
 
     # -------------------------------
     # RETURN BEST RESULTS

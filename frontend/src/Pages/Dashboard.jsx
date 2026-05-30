@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import "./Dashboard.css";
 import {
   uploadDataset,
+  profileDataset,
   downloadModel,
   downloadPreprocessor,
+  downloadMicroservice,
 } from "../services/api";
 
 import {
@@ -68,37 +70,48 @@ export default function Dashboard() {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  
+  const [profile, setProfile] = useState(null);
+  const [config, setConfig] = useState({ drop_columns: [], impute_strategies: {}, target_column: "" });
 
-  const handleUpload = async () => {
+  const handleAnalyze = async () => {
     if (!file) return alert("Select CSV file");
     setLoading(true);
     setResult(null); 
+    setProfile(null);
     try {
-      const res = await uploadDataset(file);
+      const res = await profileDataset(file);
+      if (res.error) {
+        alert(res.error);
+      } else {
+        setProfile(res);
+        setConfig(prev => ({...prev, target_column: res.analysis.target_column}));
+      }
+    } catch {
+      alert("Error profiling");
+    }
+    setLoading(false);
+  };
+
+  const handleTrain = async () => {
+    setLoading(true);
+    setResult(null); 
+    try {
+      const res = await uploadDataset(file, config);
       if (res.error) {
         alert(res.error);
       } else {
         setResult(res);
-        
-        // ✅ THE FIX: Use feature_columns from your routes.py
-        // This list specifically excludes the target column.
+        setProfile(null);
         if (res.feature_columns) {
           localStorage.setItem("features", JSON.stringify(res.feature_columns));
           window.dispatchEvent(new Event("storage"));
         }
       }
     } catch {
-      alert("Error uploading");
+      alert("Error training");
     }
     setLoading(false);
-  };
-
-  const handleCopy = () => {
-    if (!finalCode) return;
-    navigator.clipboard.writeText(finalCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
   };
 
   const finalExplanation = typeof result?.llm_explanation === "object"
@@ -114,7 +127,9 @@ export default function Dashboard() {
     : [];
 
   const modelData = result?.initial_scores
-    ? Object.entries(result.initial_scores).map(([k, v]) => ({ name: k, value: v }))
+    ? Object.entries(result.initial_scores)
+        .map(([k, v]) => ({ name: k, value: v }))
+        .sort((a, b) => b.value - a.value)
     : [];
 
   return (
@@ -133,12 +148,100 @@ export default function Dashboard() {
             Browse Files
           </label>
           {file && <p className="file-name">Selected: {file.name}</p>}
-          <button className="train-btn" onClick={handleUpload} disabled={loading}>
-            {loading ? "Optimizing Engine..." : "Launch Training"}
-          </button>
+          {(!profile && !result) && (
+            <button className="train-btn" onClick={handleAnalyze} disabled={loading}>
+              {loading ? "Analyzing Data..." : "Analyze Data"}
+            </button>
+          )}
         </motion.div>
 
-        {loading && <div className="loader"><div className="spinner"></div><p>Analyzing architecture & weights...</p></div>}
+        {loading && <div className="loader"><div className="spinner"></div><p>Processing data and optimizing architecture...</p></div>}
+        
+        {/* Data Health Studio */}
+        {profile && !result && (
+          <motion.div className="glass-card wide studio-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="card-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <h3>🧹 Data Health Studio</h3>
+                <button className="train-btn small" onClick={handleTrain} disabled={loading}>
+                    {loading ? "Training..." : "Launch Training 🚀"}
+                </button>
+            </div>
+            
+            <div className="studio-controls" style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px'}}>
+                <label>Target Column (Prediction Target):</label>
+                <select 
+                    value={config.target_column} 
+                    onChange={e => setConfig({...config, target_column: e.target.value})}
+                    className="modern-select"
+                >
+                    {profile.columns.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+            </div>
+
+            <div className="table-container" style={{overflowX: 'auto'}}>
+              <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>Type</th>
+                    <th>Missing</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profile.analysis.column_details.map(col => (
+                    <tr key={col.name}>
+                      <td style={{padding: '10px', borderTop: '1px solid #1e293b'}}>{col.name}</td>
+                      <td style={{padding: '10px', borderTop: '1px solid #1e293b'}}>
+                        <span className={`badge ${col.type.toLowerCase()}`}>{col.type}</span>
+                      </td>
+                      <td style={{padding: '10px', borderTop: '1px solid #1e293b'}}>
+                        {col.missing_pct > 0 ? (
+                            <span style={{color: '#ef4444', fontWeight: 'bold'}}>{col.missing_pct}% ({col.missing_count})</span>
+                        ) : (
+                            <span style={{color: '#10b981'}}>0%</span>
+                        )}
+                      </td>
+                      <td style={{padding: '10px', borderTop: '1px solid #1e293b'}}>
+                          <select 
+                            className="modern-select"
+                            value={
+                                config.drop_columns.includes(col.name) 
+                                ? "drop" 
+                                : config.impute_strategies[col.name] || "auto"
+                            }
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                let newDrops = [...config.drop_columns];
+                                let newImputes = {...config.impute_strategies};
+                                
+                                if (val === "drop") {
+                                    if (!newDrops.includes(col.name)) newDrops.push(col.name);
+                                    delete newImputes[col.name];
+                                } else if (val === "auto") {
+                                    newDrops = newDrops.filter(c => c !== col.name);
+                                    delete newImputes[col.name];
+                                } else {
+                                    newDrops = newDrops.filter(c => c !== col.name);
+                                    newImputes[col.name] = val;
+                                }
+                                setConfig({...config, drop_columns: newDrops, impute_strategies: newImputes});
+                            }}
+                          >
+                              <option value="auto">Auto (Pipeline)</option>
+                              <option value="drop">Drop Column</option>
+                              {col.type === "Numeric" && <option value="mean">Impute Mean</option>}
+                              {col.type === "Numeric" && <option value="median">Impute Median</option>}
+                              <option value="most_frequent">Impute Most Frequent</option>
+                          </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
 
         <AnimatePresence>
           {result && (
@@ -150,12 +253,12 @@ export default function Dashboard() {
                 </motion.div>
                 <motion.div className="glass-card big" variants={itemVariants}>
                   <span className="card-label">
-                    {result.problem_type === "classification" ? "OPTIMIZED ACCURACY" : "R² SCORE"}
+                    {result.problem_type === "classification" ? "FINAL TEST ACCURACY" : "FINAL TEST R² SCORE"}
                   </span>
                   <h3 className="highlight">
                     {result.problem_type === "classification" 
-                      ? `${(result.optimized_score * 100).toFixed(2)}%`
-                      : Number(result.optimized_score).toFixed(3)}
+                      ? `${(result.metrics?.accuracy * 100).toFixed(2)}%`
+                      : Number(result.metrics?.r2 || result.optimized_score).toFixed(3)}
                   </h3>
                 </motion.div>
               </div>
@@ -194,7 +297,7 @@ export default function Dashboard() {
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={modelData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                        <XAxis dataKey="name" stroke="#64748b" fontSize={10}/>
+                        <XAxis dataKey="name" stroke="#64748b" fontSize={10} interval={0} angle={-25} textAnchor="end" height={60} />
                         <YAxis stroke="#64748b" fontSize={12}/>
                         <Bar dataKey="value">
                           {modelData.map((entry, index) => (
@@ -264,13 +367,66 @@ export default function Dashboard() {
                 />
               </motion.div>
 
-              <motion.div className="download-section" variants={itemVariants}>
-                <button className="action-btn model" onClick={downloadModel}><span className="icon">📦</span> Deploy Model (.pkl)</button>
-                <button className="action-btn pre" onClick={downloadPreprocessor}><span className="icon">⚙️</span> Preprocessor</button>
+              <motion.div className="download-section">
+                <div className="action-buttons">
+                  <button className="btn-secondary" onClick={downloadModel}>
+                    💾 Download Model (.pkl)
+                  </button>
+                  <button className="btn-secondary" onClick={downloadPreprocessor}>
+                    ⚙️ Download Preprocessor
+                  </button>
+                  <button className="btn-primary highlight-btn" onClick={downloadMicroservice} style={{background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none'}}>
+                    🚢 Download API (Docker)
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Info & Tech Stack Section */}
+        {!loading && !result && !profile && (
+          <motion.div 
+            className="info-section"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            <div className="glass-card about-card">
+              <h3>🚀 About ModelSmith AutoML</h3>
+              <p>ModelSmith is an enterprise-grade automated machine learning platform designed to bridge the gap between raw data and deployable intelligence. Simply upload your dataset, and our engine automatically profiles the data, imputes missing values, trains a diverse array of advanced algorithms, and utilizes Optuna to find the absolute optimal hyperparameters.</p>
+            </div>
+            
+            <div className="glass-card stack-card">
+              <h3>🛠️ Technology Stack</h3>
+              <div className="stack-grid">
+                <div className="stack-item">⚛️ React & Framer Motion</div>
+                <div className="stack-item">⚡ FastAPI</div>
+                <div className="stack-item">🧠 TensorFlow & Keras</div>
+                <div className="stack-item">🌳 XGBoost & LightGBM</div>
+                <div className="stack-item">🎯 Optuna HPT</div>
+                <div className="stack-item">🤖 Groq LLM</div>
+              </div>
+            </div>
+
+            <div className="glass-card stack-card">
+              <h3>🤖 Machine Learning Arsenal</h3>
+              <div className="stack-grid">
+                <div className="stack-item">🌲 Random Forest</div>
+                <div className="stack-item">🚀 XGBoost</div>
+                <div className="stack-item">💡 LightGBM</div>
+                <div className="stack-item">📈 Logistic Regression</div>
+                <div className="stack-item">⚔️ Support Vector Machines (SVM)</div>
+                <div className="stack-item">🧠 Deep Neural Networks</div>
+              </div>
+            </div>
+
+            <div className="glass-card about-card">
+              <h3>🌍 Why AutoML Matters Today</h3>
+              <p>In the modern data-driven landscape, building robust AI models often takes weeks of tedious manual tuning, feature engineering, and algorithm selection. ModelSmith democratizes this process by instantly discovering the most powerful architectures for your specific data, empowering businesses to deploy high-accuracy predictive intelligence in seconds rather than months.</p>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

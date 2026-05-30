@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Form
+from typing import Optional
 import joblib
 import pandas as pd
 import numpy as np
@@ -15,7 +16,8 @@ from app.services.experiment_tracker import log_experiment
 from app.services.code_generator import generate_training_code
 from app.services.llm_service import generate_explanation
 from app.models.schemas import PredictionRequest
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from app.services.mlops_generator import generate_microservice_zip
 
 router = APIRouter()
 
@@ -41,13 +43,64 @@ def download_model():
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/api/upload")
-async def upload_file(file: UploadFile):
+@router.get("/api/download-api")
+def download_api():
+    try:
+        zip_buffer = generate_microservice_zip()
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={"Content-Disposition": "attachment; filename=microservice.zip"}
+        )
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/api/profile")
+async def profile_dataset(file: UploadFile):
     try:
         df = load_csv(file)
         analysis = analyze_data(df)
-        target_column = analysis["target_column"]
-        problem_type = analysis["problem_type"]
+        
+        return sanitize_data({
+            "message": "Profiling complete",
+            "analysis": analysis,
+            "preview": df.head(5).to_dict(orient="records"),
+            "columns": list(df.columns)
+        })
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"error": str(e)}
+
+@router.post("/api/upload")
+async def upload_file(
+    file: UploadFile, 
+    target_column: Optional[str] = Form(None),
+    drop_columns: Optional[str] = Form(None),
+    impute_strategies: Optional[str] = Form(None)
+):
+    try:
+        df = load_csv(file)
+        analysis = analyze_data(df)
+        # Override target column if user provided it
+        if target_column:
+            # Re-evaluate problem type if target column changed manually
+            if df[target_column].dtype == "object":
+                problem_type = "classification"
+            else:
+                unique_values = df[target_column].nunique()
+                problem_type = "classification" if unique_values < 10 else "regression"
+        else:
+            target_column = analysis["target_column"]
+            problem_type = analysis["problem_type"]
+            
+        # Parse configs
+        drops = json.loads(drop_columns) if drop_columns else []
+        imputes = json.loads(impute_strategies) if impute_strategies else {}
+        
+        # Apply manual preprocessing
+        from app.services.preprocessor import apply_manual_preprocessing
+        df = apply_manual_preprocessing(df, drops, imputes)
 
         X_train, X_test, y_train, y_test, preprocessor = preprocess_data(
             df, target_column
@@ -61,8 +114,10 @@ async def upload_file(file: UploadFile):
             best_model, X_train, y_train, problem_type
         )
 
+        input_dim = X_train.shape[1]
+
         final_model = build_final_model(
-            best_model, best_params, problem_type
+            best_model, best_params, problem_type, input_dim=input_dim
         )
 
         train_and_save_model(
@@ -89,6 +144,10 @@ async def upload_file(file: UploadFile):
             }
 
         feature_names = list(df.drop(columns=[target_column]).columns)
+        
+        with open("features.json", "w") as f:
+            json.dump(feature_names, f)
+            
         feature_importance = get_feature_importance(final_model, feature_names)
 
         generated_code = generate_training_code(best_model, best_params, problem_type)
@@ -224,4 +283,3 @@ def get_experiments():
 
     except Exception as e:
         return {"error": str(e)}
-}

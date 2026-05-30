@@ -3,6 +3,29 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
+import pandas as pd
+
+
+def apply_manual_preprocessing(df, drop_columns, impute_strategies):
+    # Drop columns
+    if drop_columns:
+        df = df.drop(columns=[col for col in drop_columns if col in df.columns])
+    
+    # Apply manual imputations
+    if impute_strategies:
+        for col, strategy in impute_strategies.items():
+            if col not in df.columns:
+                continue
+            if strategy == "mean" and pd.api.types.is_numeric_dtype(df[col]):
+                df[col] = df[col].fillna(df[col].mean())
+            elif strategy == "median" and pd.api.types.is_numeric_dtype(df[col]):
+                df[col] = df[col].fillna(df[col].median())
+            elif strategy == "most_frequent":
+                mode_val = df[col].mode()
+                if not mode_val.empty:
+                    df[col] = df[col].fillna(mode_val[0])
+    
+    return df
 
 
 def preprocess_data(df, target_column):

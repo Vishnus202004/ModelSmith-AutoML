@@ -5,7 +5,7 @@ from xgboost import XGBClassifier, XGBRegressor
 from lightgbm import LGBMClassifier, LGBMRegressor
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
+from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Input
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 
@@ -27,7 +27,8 @@ class KerasClassifierWrapper(BaseEstimator):
 
     def build_model(self):
         model = Sequential([
-            Dense(64, activation="relu", input_dim=self.input_dim),
+            Input(shape=(self.input_dim,)),
+            Dense(64, activation="relu"),
             BatchNormalization(),
             Dropout(self.dropout_rate),
             Dense(32, activation="relu"),
@@ -89,7 +90,8 @@ class KerasRegressorWrapper(BaseEstimator):
 
     def build_model(self):
         model = Sequential([
-            Dense(64, activation="relu", input_dim=self.input_dim),
+            Input(shape=(self.input_dim,)),
+            Dense(64, activation="relu"),
             BatchNormalization(),
             Dropout(self.dropout_rate),
             Dense(32, activation="relu"),

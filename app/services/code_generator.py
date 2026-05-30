@@ -31,9 +31,16 @@ def generate_training_code(best_model_name, best_params, problem_type):
         else:
             code += "from sklearn.svm import SVR\n\n"
 
+    elif best_model_name == "lightgbm":
+        if problem_type == "classification":
+            code += "from lightgbm import LGBMClassifier\n\n"
+        else:
+            code += "from lightgbm import LGBMRegressor\n\n"
+
     elif best_model_name == "neural_network":
         code += "from tensorflow.keras.models import Sequential\n"
-        code += "from tensorflow.keras.layers import Dense\n\n"
+        code += "from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Input\n"
+        code += "from tensorflow.keras.optimizers import Adam\n\n"
 
     # -------------------------------
     # Model Initialization
@@ -41,20 +48,29 @@ def generate_training_code(best_model_name, best_params, problem_type):
     code += "# Model initialization\n"
 
     if best_model_name == "neural_network":
+        dropout_rate = best_params.get('dropout_rate', 0.2)
+        learning_rate = best_params.get('learning_rate', 0.001)
+        epochs = best_params.get('epochs', 100)
+        batch_size = best_params.get('batch_size', 32)
+        final_layer = "Dense(1, activation='sigmoid')" if problem_type == "classification" else "Dense(1)"
         code += "model = Sequential([\n"
+        code += "    Input(shape=(X_train.shape[1],)),\n"
+        code += "    Dense(64, activation='relu'),\n"
+        code += "    BatchNormalization(),\n"
+        code += f"    Dropout({dropout_rate}),\n"
         code += "    Dense(32, activation='relu'),\n"
-        code += "    Dense(16, activation='relu'),\n"
-        code += "    Dense(1)\n"
+        code += "    BatchNormalization(),\n"
+        code += f"    Dropout({dropout_rate}),\n"
+        code += f"    {final_layer}\n"
         code += "])\n\n"
+        code += f"model.compile(optimizer=Adam(learning_rate={learning_rate}), loss={'\"binary_crossentropy\"' if problem_type == 'classification' else '\"mse\"'}, metrics=[{'\"accuracy\"' if problem_type == 'classification' else '\"mae\"'}])\n\n"
+        code += "# Train model\n"
+        code += f"model.fit(X_train, y_train, epochs={epochs}, batch_size={batch_size})\n\n"
     else:
         params_str = ", ".join([f"{k}={v}" for k, v in best_params.items()])
         code += f"model = {model_class_name(best_model_name, problem_type)}({params_str})\n\n"
-
-    # -------------------------------
-    # Training
-    # -------------------------------
-    code += "# Train model\n"
-    code += "model.fit(X_train, y_train)\n\n"
+        code += "# Train model\n"
+        code += "model.fit(X_train, y_train)\n\n"
 
     # -------------------------------
     # Prediction
@@ -70,6 +86,7 @@ def model_class_name(name, problem_type):
         "random_forest": "RandomForestClassifier" if problem_type == "classification" else "RandomForestRegressor",
         "xgboost": "XGBClassifier" if problem_type == "classification" else "XGBRegressor",
         "logistic_regression": "LogisticRegression",
-        "svm": "SVC" if problem_type == "classification" else "SVR"
+        "svm": "SVC" if problem_type == "classification" else "SVR",
+        "lightgbm": "LGBMClassifier" if problem_type == "classification" else "LGBMRegressor"
     }
     return mapping.get(name, "")

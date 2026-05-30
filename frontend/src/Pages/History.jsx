@@ -67,9 +67,9 @@ export default function History() {
         <div className="history-grid">
           <AnimatePresence>
             {data.map((item, i) => {
-              const chartData = Object.entries(item.initial_scores || {}).map(
-                ([k, v]) => ({ name: k, value: v })
-              );
+              const chartData = Object.entries(item.initial_scores || {})
+                .map(([k, v]) => ({ name: k, value: v }))
+                .sort((a, b) => b.value - a.value);
 
               return (
                 <motion.div
@@ -123,7 +123,7 @@ export default function History() {
                         />
                         <Bar dataKey="value" fill="url(#colorScore)" radius={[4, 4, 0, 0]}>
                            {chartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : 'rgba(255,255,255,0.1)'} />
+                              <Cell key={`cell-${index}`} fill={entry.name === item.best_model ? '#3b82f6' : 'rgba(255,255,255,0.1)'} />
                            ))}
                         </Bar>
                       </BarChart>

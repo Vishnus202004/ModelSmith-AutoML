@@ -7,6 +7,10 @@ import os
 load_dotenv()
 
 from app.routes import router
+from app.db.database import init_db
+
+# 🔥 INITIALIZE DATABASE
+init_db()
 
 app = FastAPI(
     title="MSMITH AutoML API",

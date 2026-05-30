@@ -7,7 +7,7 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 from app.services.model_registry import KerasClassifierWrapper, KerasRegressorWrapper
 
 
-def build_final_model(model_name, params, problem_type):
+def build_final_model(model_name, params, problem_type, input_dim=None):
     """
     Build final model with best parameters
     """
@@ -40,6 +40,8 @@ def build_final_model(model_name, params, problem_type):
             return LGBMRegressor(**params)
 
     elif model_name == "neural_network":
+        if input_dim is not None:
+            params["input_dim"] = input_dim
         if problem_type == "classification":
             return KerasClassifierWrapper(**params)
         else:
