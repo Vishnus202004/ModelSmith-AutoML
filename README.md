@@ -15,28 +15,28 @@
 
 ## ✨ Core Features
 
-### 🤖 1. Autonomous ML Pipeline
+### 1. Autonomous ML Pipeline
 - **Smart Problem Detection**: Automatically classifies targets into **Classification** or **Regression**.
 - **Automated Preprocessing**: Handles `StandardScaler` for numbers, `OneHotEncoding` for categories, and intelligent baseline imputation.
-- **Top-Tier Arsenal**: Simutaneously trains 6 industry-standard architectures:
+- **Top-Tier Arsenal**: Simultaneously trains 6 industry-standard architectures:
   - Deep Neural Networks (Keras/TensorFlow)
   - LightGBM & XGBoost
   - Random Forest & Support Vector Machines (SVM)
   - Logistic/Linear Regression
 
-### 🛠️ 2. Human-in-the-Loop Data Studio
+### 2. Human-in-the-Loop Data Studio
 - **Interactive Profiling**: Deep-dive into missing values, data types, and distributions before hitting "Train."
 - **Manual Overrides**: Explicitly drop high-variance columns or choose custom imputation strategies (Mean, Median, Most Frequent).
 
-### 📈 3. Enterprise Optimization
+### 3. Enterprise Optimization
 - **Optuna Integration**: Bayesian Optimization to find the perfect learning rates, tree depths, and epochs.
 - **Cross-Validation**: Robust K-Fold validation to ensure your models handle real-world data without overfitting.
 
-### 📦 4. MLOps: One-Click Deployment
+### 4. MLOps: One-Click Deployment
 - **Instant API**: Generates a dynamic `main.py` using **Pydantic** schemas tailored to your specific dataset columns.
 - **Dockerization**: One-click download of a `.zip` containing model binaries, the API script, and a `Dockerfile` ready for AWS/GCP/Kubernetes.
 
-### 🧠 5. Explainable AI (XAI)
+### 5. Explainable AI (XAI)
 - **Llama-3.1 Insights**: Powered by **Groq**, the platform generates natural language explanations of model performance and feature importance.
 - **Code Transparency**: View and export the exact Python code used to generate the model for local replication.
 
@@ -71,17 +71,17 @@
 
 ## 🚀 How It Works
 
-1.  **Upload & Analyze**: Drag-and-drop a `.csv`. The backend generates a structural profile.
-2.  **Pre-Process**: Clean your data and define your target in the Data Health Studio.
-3.  **Train & Optimize**: The engine handles the heavy lifting, running the Optuna optimization loop on the best architecture.
-4.  **Evaluate & Explain**: Review R²/Accuracy scores and AI-generated feature importance.
-5.  **Deploy**: Test via "Live Inference" or download your **Dockerized API**.
+1. **Upload & Analyze**: Drag-and-drop a `.csv`. The backend generates a structural profile.
+2. **Pre-Process**: Clean your data and define your target in the Data Health Studio.
+3. **Train & Optimize**: The engine handles the heavy lifting, running the Optuna optimization loop on the best architecture.
+4. **Evaluate & Explain**: Review R²/Accuracy scores and AI-generated feature importance.
+5. **Deploy**: Test via "Live Inference" or download your **Dockerized API**.
 
 ---
 
 ## 💻 Local Setup
 
-### 🔧 Backend Requirements
+### Backend Requirements
 ```bash
 # Create and activate virtual environment
 python -m venv venv
