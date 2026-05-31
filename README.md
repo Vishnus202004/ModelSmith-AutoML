@@ -42,7 +42,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 <table width="100%">
   <tr>
@@ -69,7 +69,7 @@
 
 ---
 
-## 🚀 How It Works
+## How It Works
 
 1. **Upload & Analyze**: Drag-and-drop a `.csv`. The backend generates a structural profile.
 2. **Pre-Process**: Clean your data and define your target in the Data Health Studio.
@@ -79,7 +79,7 @@
 
 ---
 
-## 💻 Local Setup
+##  Local Setup
 
 ### Backend Requirements
 ```bash
