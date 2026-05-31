@@ -1,4 +1,4 @@
-# <p align="center">🚀 ModelSmith AutoML</p>
+# <p align="center"> ModelSmith AutoML</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Framework-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
@@ -13,7 +13,7 @@
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 ### 1. Autonomous ML Pipeline
 - **Smart Problem Detection**: Automatically classifies targets into **Classification** or **Regression**.
